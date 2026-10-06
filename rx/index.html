@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<!-- Opened as ".../rx" (no slash)? The files below are relative to the rx/ folder, so go to ".../rx/" first. -->
+<script>if (!location.pathname.endsWith('/') && !location.pathname.endsWith('.html')) location.replace(location.pathname + '/' + location.search);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จอเรียกคิว แผนกรังสี</title>
+<style>
+  /* One department on the whole TV: the call being made (left, stays until the next call), waiting (top right),
+     already called (bottom right). Portrait screens stack them. */
+  /* Sizes in vh: the same layout fits a 1080p TV and a small 720p box (q_speaker zooms, so px would overflow).
+     Android's Thai font has a much taller "normal" line height, hence the fixed line-height. */
+  body { margin: 0; padding: 2vh 2vw; box-sizing: border-box; height: 100vh; display: flex;
+         background: #0f1b3d; color: #fff; font: 2.6vh/1.25 sans-serif; }
+  .dep { flex: 1; min-height: 0; display: grid; gap: 2vh 2vw; grid-template-columns: 3fr 2fr;
+         grid-template-rows: auto 1fr 1fr; }
+  header { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; }
+  h1 { margin: 0; font-size: 6vh; }
+  .online { width: 2.5vh; height: 2.5vh; border-radius: 50%; background: #c0392b; }
+  .online.on { background: #3fa34d; }
+  .big { grid-row: span 2; min-height: 0; display: flex; flex-direction: column; justify-content: center;
+         padding: 2vh; border-radius: 2.5vh; background: #1c2a5c; text-align: center; font-size: 5vh; }
+  .list { min-height: 0; overflow: hidden; padding: 1.5vh 1.5vw; border-radius: 2.5vh; background: #16224a; }
+  .list h2 { margin: 0 0 1vh; font-size: 4vh; color: #9fb0ff; }
+  .list ul { display: flex; flex-wrap: wrap; gap: 1.2vh; margin: 0; padding: 0; list-style: none; }
+  .list li { padding: .5vh 1.5vh; border-radius: 1.2vh; background: #1c2a5c; font-size: 5vh; font-weight: bold; }
+  .called li { color: #9fb0ff; }
+  @media (orientation: portrait) {
+    .dep { grid-template-columns: 1fr; grid-template-rows: auto 2fr 1fr 1fr; }
+    header { grid-column: auto; }
+    .big { grid-row: auto; }
+  }
+  .big .q { font-size: 26vh; font-weight: bold; line-height: 1.1; }
+  .big .fname { font-size: 11vh; }
+  .big .counter { font-size: 8vh; opacity: .75; } /* follows the box's text colour, so it turns dark on the yellow flash */
+  #status { position: fixed; left: 2vw; bottom: .3vh; color: #ff8a80; font-size: 1.8vh; }
+  /* A new call (display.js adds .flash): number, name, room rise into place one after another, then the box
+     flashes yellow with dark text 5 times, 1 s each (a fade alone was invisible from across the room).
+     The padding keeps Thai marks above/below the line out of the clip. */
+  .mask { overflow: hidden; padding: .3em 0; margin: -.3em 0; flex-shrink: 0; /* a squeezed line would clip */ }
+  .big.flash .mask > * { animation: rise .7s cubic-bezier(.2, .8, .2, 1) both; }
+  .big.flash .fname { animation-delay: .12s; }
+  .big.flash .counter { animation-delay: .24s; }
+  .big.flash { animation: flash 1s ease-in-out .9s 5; }
+  @keyframes rise { from { transform: translateY(130%); } }
+  @keyframes flash { 50% { background: #f5b301; color: #0f1b3d; } }
+  @media (prefers-reduced-motion: reduce) { .big.flash .mask > * { animation: none; } }
+</style>
+</head>
+<body>
+<!-- data-dep = this department's code on q_signal (and the key in get_name.php's $call_texts) — "xray", not "rx",
+     because rx is the pharmacy on the mix screen; data-counter = word shown before the room number.
+     Class names inside: see display.js next to this file -->
+<section class="dep" data-dep="xray" data-counter="ห้อง">
+  <header><h1>แผนกรังสี</h1><div class="online" title="q_signal"></div></header>
+  <div class="big"><div>เชิญหมายเลข</div>
+    <div class="mask"><div class="q">-</div></div>
+    <div class="mask"><div class="fname"></div></div>
+    <div class="mask"><div class="counter"></div></div>
+  </div>
+  <div class="list"><h2>รอเรียก</h2><ul class="waiting"></ul></div>
+  <div class="list"><h2>เรียกแล้ว</h2><ul class="called"></ul></div>
+</section>
+<div id="status"></div>
+
+<!-- Local copies: TV boxes may have no internet -->
+<script src="../js/jquery.min.js"></script>
+<script src="../js/socket.io.min.js"></script>
+<script src="../js/speaker.js"></script>
+<script src="../js/signal_client.js"></script>
+<script src="display.js"></script>
+</body>
+</html>
